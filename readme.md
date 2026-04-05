@@ -1,5 +1,7 @@
 # Git 教程：从入门到双平台同步推送
 
+> 一份适合新手入门、也能作为日常查阅手册使用的 Git 教程。
+
 ## 🎯 这份教程能帮你做什么
 
 这是一份面向初学者到进阶用户的 Git 教程，目标是让你掌握：
@@ -85,8 +87,21 @@
 - [八、分支基础](#八分支基础)
 - [九、合并与变基](#九合并与变基)
 - [十、冲突怎么解决](#十冲突怎么解决)
+- [十三、多人协作的常见流程](#十三多人协作的常见流程)
 - [十七、回滚与撤销](#十七回滚与撤销)
 - [二十、常见问题与排错](#二十常见问题与排错)
+
+---
+
+## 📝 使用说明
+
+这份文档同时包含三种内容：
+
+- **基础解释**：帮助你建立 Git 的整体理解
+- **图解说明**：帮助你快速看懂概念和流程
+- **实战案例**：帮助你在真实场景里知道该怎么做
+
+建议你第一次阅读时先看主线流程，遇到不懂的地方再回头查对应章节。
 
 ---
 
@@ -1196,6 +1211,202 @@ push 到远程分支
   ↓
 合并回 main
 ```
+
+## 实战演示：从建分支到合并回 main 的完整流程
+
+下面用一个常见例子串起来：
+
+> 需求：新增一个登录按钮。
+
+### 第 1 步：先切回 main 并拉最新代码
+
+```bash
+git switch main
+git pull
+```
+
+常见输出：
+
+```bash
+Already on 'main'
+Your branch is up to date with 'origin/main'.
+Already up to date.
+```
+
+这一步的目的：
+
+- 保证你是从最新主线开始开发
+- 避免后面合并时冲突太多
+
+### 第 2 步：创建功能分支
+
+```bash
+git switch -c feature/login-button
+```
+
+常见输出：
+
+```bash
+Switched to a new branch 'feature/login-button'
+```
+
+### 第 3 步：修改代码并查看状态
+
+比如你修改了：
+
+- `src/App.vue`
+- `src/components/Header.vue`
+
+然后执行：
+
+```bash
+git status
+```
+
+示例输出：
+
+```bash
+On branch feature/login-button
+Changes not staged for commit:
+  modified:   src/App.vue
+  modified:   src/components/Header.vue
+```
+
+### 第 4 步：提交改动
+
+```bash
+git add .
+git commit -m "feat: 添加登录按钮"
+```
+
+常见输出：
+
+```bash
+[feature/login-button a8b9c0d] feat: 添加登录按钮
+ 2 files changed, 18 insertions(+), 1 deletion(-)
+```
+
+### 第 5 步：推送到远程分支
+
+```bash
+git push -u origin feature/login-button
+```
+
+常见输出：
+
+```bash
+Enumerating objects: 8, done.
+Counting objects: 100% (8/8), done.
+Writing objects: 100% (5/5), done.
+To github.com:user/repo.git
+ * [new branch]      feature/login-button -> feature/login-button
+branch 'feature/login-button' set up to track 'origin/feature/login-button'.
+```
+
+这说明：
+
+- 远程已经有了这个功能分支
+- 以后你再 push，直接 `git push` 就行
+
+### 第 6 步：发起 PR / MR
+
+这一步通常在 GitHub / Gitee 页面操作。
+
+PR 标题可以写成：
+
+```text
+feat: 添加登录按钮
+```
+
+PR 描述可以简单写：
+
+```text
+## 变更内容
+- 在顶部导航增加登录按钮
+- 补充按钮点击逻辑
+
+## 测试说明
+- 页面可正常显示登录按钮
+- 点击后可进入登录页
+```
+
+### 第 7 步：代码审查后合并
+
+如果平台支持，你可以点击：
+
+- Merge pull request
+- Squash and merge
+- Rebase and merge
+
+新手最常用、也最容易理解的是普通合并。
+
+### 第 8 步：回到本地同步 main
+
+PR 合并后，回到本地：
+
+```bash
+git switch main
+git pull
+```
+
+常见输出：
+
+```bash
+Switched to branch 'main'
+Updating e4f5g6h..z9y8x7w
+Fast-forward
+ src/components/Header.vue | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+```
+
+这说明主分支已经拿到你刚刚合并进去的代码了。
+
+### 第 9 步：可选，删除已完成的功能分支
+
+本地删除：
+
+```bash
+git branch -d feature/login-button
+```
+
+远程删除：
+
+```bash
+git push origin --delete feature/login-button
+```
+
+如果你只是刚学 Git，也可以先不删，等熟悉后再整理。
+
+## 图解：完整实战流程
+
+```text
+main
+  ↓
+git pull
+  ↓
+git switch -c feature/login-button
+  ↓
+修改代码
+  ↓
+git add + git commit
+  ↓
+git push -u origin feature/login-button
+  ↓
+发起 PR / MR
+  ↓
+审查通过并合并
+  ↓
+git switch main && git pull
+```
+
+## 这一套流程为什么推荐
+
+因为它有几个明显好处：
+
+- 主分支更稳定
+- 每个功能的改动范围更清晰
+- 更方便审查
+- 出问题时更容易定位和回滚
 
 ---
 
