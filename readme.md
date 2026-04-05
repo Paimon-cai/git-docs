@@ -336,6 +336,24 @@ git status
 - 哪些文件还没加入暂存区
 - 哪些文件已经准备提交
 
+示例输出：
+
+```bash
+On branch main
+Changes not staged for commit:
+  modified:   src/login.js
+
+Untracked files:
+  README-notes.txt
+
+no changes added to commit
+```
+
+你可以这样理解：
+
+- `modified`：这个文件改过了，但还没 `git add`
+- `Untracked files`：这个文件 Git 还没开始跟踪
+
 ## 2. 添加到暂存区
 
 ```bash
@@ -348,6 +366,17 @@ git add 文件名
 git add .
 ```
 
+执行后再次 `git status`，常见输出会变成：
+
+```bash
+On branch main
+Changes to be committed:
+  modified:   src/login.js
+  new file:   README-notes.txt
+```
+
+这说明文件已经进入暂存区，准备提交。
+
 ## 3. 提交
 
 ```bash
@@ -359,6 +388,18 @@ git commit -m "提交说明"
 ```bash
 git commit -m "feat: 添加登录页面"
 ```
+
+示例输出：
+
+```bash
+[main a1b2c3d] feat: 添加登录页面
+ 3 files changed, 45 insertions(+), 2 deletions(-)
+```
+
+你可以重点看：
+
+- `a1b2c3d`：这次提交的 commit ID
+- `3 files changed`：这次一共改了几个文件
 
 ## 4. 查看历史
 
@@ -379,6 +420,11 @@ git log --oneline --graph --decorate
 * e4f5g6h init project
 ```
 
+含义：
+
+- 最上面一行是最新提交
+- `HEAD -> main` 表示你当前就在 `main` 分支最新位置
+
 ## 5. 查看改动
 
 查看工作区改动：
@@ -387,11 +433,22 @@ git log --oneline --graph --decorate
 git diff
 ```
 
+示例输出：
+
+```diff
+- const title = "Login"
++ const title = "User Login"
+```
+
 查看已暂存改动：
 
 ```bash
 git diff --cached
 ```
+
+它会显示：
+
+> 那些已经 `git add` 了、即将进入下一次提交的内容。
 
 ## 图解：最常用 5 个命令在干什么
 
@@ -428,6 +485,28 @@ git status
 git add .
 git commit -m "fix: 修复首页布局问题"
 git push
+```
+
+一套更真实的终端输出可能像这样：
+
+```bash
+$ git status
+On branch main
+Changes not staged for commit:
+  modified:   src/home.css
+
+$ git add .
+
+$ git commit -m "fix: 修复首页布局问题"
+[main b7c8d9e] fix: 修复首页布局问题
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+$ git push
+Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Writing objects: 100% (3/3), done.
+To github.com:user/repo.git
+   a1b2c3d..b7c8d9e  main -> main
 ```
 
 ## 图解：完整提交流程
@@ -1322,6 +1401,14 @@ ssh-keygen -t ed25519 -C "github" -f ~/.ssh/github_key
 ssh-keygen -t ed25519 -C "gitee" -f ~/.ssh/gitee_key
 ```
 
+生成时常见提示：
+
+```bash
+Generating public/private ed25519 key pair.
+Your identification has been saved in /home/user/.ssh/github_key
+Your public key has been saved in /home/user/.ssh/github_key.pub
+```
+
 ---
 
 ## 2. 配置 SSH
@@ -1394,6 +1481,12 @@ ssh -T git@github.com
 ssh -T git@gitee.com
 ```
 
+常见成功输出类似：
+
+```bash
+Hi username! You've successfully authenticated, but GitHub does not provide shell access.
+```
+
 如果都成功，说明双 key 配置完成。
 
 ---
@@ -1406,16 +1499,37 @@ ssh -T git@gitee.com
 git stash
 ```
 
+示例输出：
+
+```bash
+Saved working directory and index state WIP on main: a1b2c3d feat: 添加登录页面
+```
+
 查看暂存列表：
 
 ```bash
 git stash list
 ```
 
+示例输出：
+
+```bash
+stash@{0}: WIP on main: a1b2c3d feat: 添加登录页面
+```
+
 恢复最近一次暂存：
 
 ```bash
 git stash pop
+```
+
+常见输出：
+
+```bash
+On branch main
+Changes not staged for commit:
+  modified:   src/login.js
+Dropped refs/stash@{0}
 ```
 
 如果只想恢复但保留 stash：
@@ -1472,6 +1586,22 @@ git restore --staged 文件名
 git reset --soft HEAD~1
 ```
 
+示例效果：
+
+```bash
+$ git reset --soft HEAD~1
+$ git status
+On branch main
+Changes to be committed:
+  modified:   src/login.js
+```
+
+这表示：
+
+- 提交记录撤回了
+- 但改动还在
+- 而且还保留在暂存区
+
 ### 回退提交并取消暂存
 
 ```bash
@@ -1496,6 +1626,19 @@ git reset --hard HEAD~1
 git revert 提交ID
 ```
 
+示例：
+
+```bash
+git revert a1b2c3d
+```
+
+常见输出：
+
+```bash
+[main c3d4e5f] Revert "feat: 添加登录页面"
+ 1 file changed, 12 deletions(-)
+```
+
 它会新建一个“反向提交”，而不是粗暴改历史。
 
 ## 图解：reset 和 revert 的区别
@@ -1516,6 +1659,175 @@ A --- B --- C --- D
 
 - `reset`：改历史
 - `revert`：补一个反向提交
+
+## 实战演示 1：刚提交错了，但还没 push
+
+### 场景
+
+你刚刚提交了一个错误版本：
+
+```bash
+git commit -m "feat: 添加登录页面"
+```
+
+后来发现：
+
+- 有一个文件不该提交
+- 或者提交信息写错了
+- 或者代码还没改完
+
+而且这次提交**还没 push**。
+
+这时最适合用：
+
+```bash
+git reset --soft HEAD~1
+```
+
+### 操作过程
+
+先看当前历史：
+
+```bash
+git log --oneline --graph --decorate
+```
+
+示例输出：
+
+```bash
+* a1b2c3d (HEAD -> main) feat: 添加登录页面
+* e4f5g6h init project
+```
+
+执行回退：
+
+```bash
+git reset --soft HEAD~1
+```
+
+再看状态：
+
+```bash
+git status
+```
+
+示例输出：
+
+```bash
+On branch main
+Changes to be committed:
+  modified:   src/login.js
+  modified:   src/router.js
+```
+
+这说明：
+
+- 最新那次提交不见了
+- 但代码改动还在
+- 而且已经在暂存区里
+
+如果你只是想重新提交一次，可以直接：
+
+```bash
+git commit -m "feat: 完善登录页面逻辑"
+```
+
+### 什么时候适合用它
+
+适合：
+
+- 刚提交完就发现问题
+- 还没 push
+- 想保留改动，只撤销提交记录
+
+不适合：
+
+- 已经 push 给别人了
+
+## 实战演示 2：已经 push 了，想安全撤回
+
+### 场景
+
+你已经把某次提交推送到远程了：
+
+```bash
+git push
+```
+
+但后来发现这个提交有问题。
+
+这时不要优先用 `reset` 改公共历史，更推荐：
+
+```bash
+git revert 提交ID
+```
+
+### 操作过程
+
+先看历史：
+
+```bash
+git log --oneline --graph --decorate
+```
+
+示例输出：
+
+```bash
+* a1b2c3d (HEAD -> main, origin/main) feat: 删除旧接口
+* e4f5g6h feat: 添加登录页面
+* h7i8j9k init project
+```
+
+现在你想撤销 `a1b2c3d`：
+
+```bash
+git revert a1b2c3d
+```
+
+常见输出：
+
+```bash
+[main z9y8x7w] Revert "feat: 删除旧接口"
+ 1 file changed, 20 insertions(+), 18 deletions(-)
+```
+
+再看历史：
+
+```bash
+git log --oneline --graph --decorate
+```
+
+示例输出：
+
+```bash
+* z9y8x7w (HEAD -> main) Revert "feat: 删除旧接口"
+* a1b2c3d (origin/main) feat: 删除旧接口
+* e4f5g6h feat: 添加登录页面
+```
+
+这表示：
+
+- 原来的错误提交还在历史里
+- 但 Git 新增了一个“反向提交”把它抵消了
+- 这种方式对团队协作更安全
+
+最后正常推送：
+
+```bash
+git push
+```
+
+## 新手判断口诀
+
+如果你拿不准该用哪个，先问自己两件事：
+
+1. 这个提交已经 push 了吗？
+2. 我是想“改历史”，还是想“补一个撤销提交”？
+
+简单记：
+
+- **没 push**：优先考虑 `reset`
+- **已 push**：优先考虑 `revert`
 
 ---
 
