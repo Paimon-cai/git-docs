@@ -713,6 +713,232 @@ Git 不知道该保留哪一个
 需要你手动决定最终内容
 ```
 
+## 实战演示：一次最常见的合并冲突
+
+下面用一个最简单的例子演示完整过程。
+
+### 场景设定
+
+当前仓库有一个文件 `config.txt`，初始内容是：
+
+```text
+theme=light
+```
+
+现在有两个人分别在不同分支修改它：
+
+- `main` 分支改成 `theme=blue`
+- `feature` 分支改成 `theme=dark`
+
+因为改的是**同一行**，所以合并时会冲突。
+
+### 第 1 步：在 main 分支修改并提交
+
+```bash
+git switch main
+```
+
+编辑 `config.txt`：
+
+```text
+theme=blue
+```
+
+提交：
+
+```bash
+git add config.txt
+git commit -m "change: set theme blue"
+```
+
+### 第 2 步：切到 feature 分支做另一种修改
+
+```bash
+git switch feature
+```
+
+编辑 `config.txt`：
+
+```text
+theme=dark
+```
+
+提交：
+
+```bash
+git add config.txt
+git commit -m "change: set theme dark"
+```
+
+### 第 3 步：把 main 合并到 feature
+
+```bash
+git merge main
+```
+
+这时 Git 可能会提示类似信息：
+
+```text
+Auto-merging config.txt
+CONFLICT (content): Merge conflict in config.txt
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+意思是：
+
+- Git 发现 `config.txt` 两边都改了
+- 但它不知道该保留哪一个
+- 所以暂停，等你手动处理
+
+### 第 4 步：打开冲突文件
+
+这时 `config.txt` 很可能会变成这样：
+
+```text
+<<<<<<< HEAD
+theme=dark
+=======
+theme=blue
+>>>>>>> main
+```
+
+图解如下：
+
+```text
+<<<<<<< HEAD      ← 当前分支（你现在所在的分支）
+theme=dark
+=======
+theme=blue
+>>>>>>> main      ← 正在合并进来的分支
+```
+
+含义是：
+
+- `HEAD` 这边是你当前分支 `feature` 的内容
+- `main` 这边是你要合并进来的内容
+- 你必须手动决定最终保留什么
+
+### 第 5 步：手动修改成最终结果
+
+比如你决定最终保留：
+
+```text
+theme=dark
+```
+
+那就把整个文件改成：
+
+```text
+theme=dark
+```
+
+如果你想折中，也可以改成：
+
+```text
+theme=blue-dark
+```
+
+关键点是：
+
+- 删除 `<<<<<<<`、`=======`、`>>>>>>>`
+- 文件里只保留你真正想要的最终内容
+
+### 第 6 步：标记冲突已解决
+
+```bash
+git add config.txt
+```
+
+这一步的意思不是“再改一次”，而是告诉 Git：
+
+> 这个文件的冲突我已经处理好了。
+
+### 第 7 步：完成合并
+
+```bash
+git commit -m "merge: resolve conflict in config.txt"
+```
+
+到这里，冲突就解决完成了。
+
+## 图解：完整冲突处理流程
+
+```text
+main 分支改了一行
+        ↓
+feature 分支也改了同一行
+        ↓
+git merge main
+        ↓
+Git 无法自动判断保留谁
+        ↓
+产生冲突标记
+        ↓
+你手动修改文件
+        ↓
+git add 冲突文件
+        ↓
+git commit
+        ↓
+冲突解决完成
+```
+
+## 如果是 rebase 里的冲突怎么办
+
+流程几乎一样，只是最后一步不是 `git commit`，而是：
+
+```bash
+git add config.txt
+git rebase --continue
+```
+
+如果不想继续这次变基：
+
+```bash
+git rebase --abort
+```
+
+## 新手最容易踩的坑
+
+### 1. 只删了一半冲突标记
+
+错误示例：
+
+```text
+<<<<<<< HEAD
+theme=dark
+=======
+theme=blue
+```
+
+这样文件还是坏的，因为冲突标记没删干净。
+
+### 2. 改完文件后忘了 `git add`
+
+只改文件不 `git add`，Git 不知道你已经解决完冲突。
+
+### 3. 没看清自己当前在哪个分支
+
+冲突里的 `HEAD` 指的是**当前所在分支**，不是永远等于 `main`。
+
+### 4. 一看到冲突就慌
+
+大多数冲突本质上只是一个选择题：
+
+- 保留我的版本
+- 保留对方版本
+- 两边合并成一个新版本
+
+## 一个实用判断口诀
+
+看到冲突时，按这个顺序想：
+
+1. 我当前在哪个分支？
+2. 哪一段是当前分支内容？
+3. 哪一段是合并进来的内容？
+4. 最终业务上应该保留什么？
+5. 改完后有没有删干净冲突标记？
+
 ---
 
 # 十一、远程仓库基础
